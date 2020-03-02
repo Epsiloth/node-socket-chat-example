@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Socket.IO CHAT</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html{
+        height: 100%;
+      }
+      body {
+        font: 13px Helvetica, Arial;
+        height: 100%;
+      }
+      form {
+        background: green;
+        padding: 3px;
+        position: fixed;
+        bottom: 0;
+        width: 66%;
+      }
+      form input {
+        border: 0;
+        padding: 10px;
+        width: 90%;
+        margin-right: 0.5%;
+      }
+      form button {
+        width: 9%;
+        background: greenyellow;
+        border: none;
+        padding: 10px;
+      }
+      #messages {
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+        border: 1px solid #31cf19;
+        background-color: #98fa89;
+        min-height: 100%;
+      }
+      #messages li {
+        padding: 5px 10px;
+      }
+      #messages li:nth-child(odd) {
+        background: #93fc83;
+      }
+      #messages li:nth-child(even) {
+        background: #aef7a3;
+      }
+      #usuarios {
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+        border: 1px solid #31cf19;
+        background-color: #98fa89;
+        min-height: 100%;
+      }
+      #usuarios li {
+        padding: 5px 10px;
+        background: #2dff0d;
+        text-align: center;
+      }
+      #estaescribiendo {
+        color: red;
+      }
+    </style>
+    <!-- <script src="https://code.jquery.com/jquery-1.11.1.js"></script>  -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/siofu/client.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+      integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
+      crossorigin="anonymous"
+    />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script>
+      $(function() {
+        var usu = prompt("Write your nickname: ");
+        while ((usu==null) || (usu=="")){
+          var usu = prompt("Write your nickname: ");
+        }
+        var socket = io();
+        socket.emit("usuario", usu);
+        $("form").submit(function(e) {
+          e.preventDefault(); // prevents page reloading
+
+          socket.emit("chat", $("#m").val());
+          $("#m").val("");
+          return false;
+        });
+
+        socket.on("chat", function(datos) {
+          $("#messages").append(
+            $("<li id=>").text(datos.autor + ": " + datos.mensajes)
+          );
+        });
+
+        socket.on("conectado", function(usuario) {
+          $("#usuarios").append(
+            $("<li id=" + usuario + ">").text(usuario)
+          );
+        });
+
+        socket.on("disconnect", function(usuario) {
+          $("#" + usuario).remove();
+        });
+
+        var timeout = null;
+        $("form").keypress(function() {
+          socket.emit("escribiendo", usu);
+          if (timeout) {
+            clearTimeout(timeout);
+          }
+          timeout = setTimeout(() => {
+            socket.emit("noescribiendo", usu);
+          }, 1000);
+        });
+
+        socket.on("estaescribiendo", function(usuario) {
+          $("#estaescribiendo").show();
+          $("#estaescribiendo").text("Esta escribiendo el usuario " + usuario);
+        });
+
+        socket.on("noestaescribiendo", function(usuario) {
+          $("#estaescribiendo").hide();
+        });
+
+        socket.on("archivo", function(archivo) {
+          $("#messages").append(
+            $("<li >"+usu+": <a href=./files/"+archivo.file.name+" target=\"_blank\">" + archivo.file.name +"</a>"));
+        });
+
+        var uploader = new SocketIOFileUpload(socket);
+        uploader.listenOnInput(document.getElementById("siofu_input"));
+      });
+    </script>
+  </head>
+  <body>
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-4">
+          <h1>ONLINE USERS</h1>
+          <ul id="usuarios"></ul>
+        </div>
+        <div class="col-8">
+          <h1>CHAT</h1>
+          <div id="estaescribiendo"></div>
+          <ul id="messages"></ul>
+          <form action="">
+            <input id="m" autocomplete="off" /><button>Send</button>
+            <input type="file" id="siofu_input" />
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+      integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+      integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+      crossorigin="anonymous"
+    ></script>
+  </body>
+</html>

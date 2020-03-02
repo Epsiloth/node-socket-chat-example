@@ -1,0 +1,16 @@
+{
+  "name": "chat-example",
+  "version": "1.0.0",
+  "description": "First socket.io app",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Pablo Torres",
+  "license": "ISC",
+  "dependencies": {
+    "express": "4.15.2",
+    "socket.io": "^2.3.0",
+    "socketio-file-upload": "^0.7.0"
+  }
+}
